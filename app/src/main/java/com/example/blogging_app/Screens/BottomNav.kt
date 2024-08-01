@@ -1,17 +1,17 @@
+// BottomNav.kt
 package com.example.blogging_app.Screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -21,6 +21,7 @@ import androidx.navigation.compose.*
 import com.example.blogging_app.R
 import com.example.blogging_app.model.BottomNavItem
 import com.example.blogging_app.navigation.Routes
+import com.example.blogging_app.screens.HomeScreen
 import com.example.blogging_app.viewmodel.AuthViewModel
 
 @Composable
@@ -45,7 +46,7 @@ fun BottomNav(navController: NavHostController) {
 
 @Composable
 fun MyBottomBar(navController1: NavHostController) {
-    val backStackEntry = navController1.currentBackStackEntryAsState()
+    val backStackEntry by navController1.currentBackStackEntryAsState()
     val items = listOf(
         BottomNavItem(
             "Home",
@@ -74,35 +75,36 @@ fun MyBottomBar(navController1: NavHostController) {
         ),
     )
 
-    BottomAppBar (
+    BottomAppBar(
         containerColor = Color(0xFF635383)
-    ){
+    ) {
         items.forEach {
-            val selected=it.route==backStackEntry?.value?.destination?.route
+            val selected = it.route == backStackEntry?.destination?.route
             NavigationBarItem(
                 selected = selected,
-                onClick = {navController1.navigate(it.route){
-                    popUpTo(navController1.graph.findStartDestination().id)
-                    {
-                        saveState=true
+                onClick = {
+                    navController1.navigate(it.route) {
+                        popUpTo(navController1.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
                     }
-                    launchSingleTop=true
-                } },
+                },
                 icon = {
                     Icon(
                         imageVector = it.icon,
                         contentDescription = it.title,
-                        tint = if (selected) Color(0xFF4D036F) else Color.White ,
+                        tint = if (selected) Color(0xFF4D036F) else Color.White,
                         modifier = Modifier.size(32.dp)
-
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent// Set the indicator color to light purple
+                    indicatorColor = Color.Transparent
                 ),
-
             )
-
         }
     }
 }
+
+//// Ensure to import the HomeScreen
+//import com.example.blogging_app.Screens.HomeScreen

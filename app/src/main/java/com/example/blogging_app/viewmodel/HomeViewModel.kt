@@ -9,72 +9,88 @@ import com.example.blogging_app.model.UserModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.MutableData
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.firestore.core.Transaction
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
-
 class HomeViewModel : ViewModel() {
-
      private val db = FirebaseDatabase.getInstance()
-     private val thread = db.getReference("posts")
-
+     private val threadRef = db.getReference("posts")
 
      private val _userData = MutableLiveData<UserModel>()
      val userData: LiveData<UserModel> = _userData
      private val _error = MutableLiveData<String>()
      val error: LiveData<String> = _error
 
-     private var _threadsAndUsers = MutableLiveData<List<Pair<ThreadModel,UserModel>>>()
-     val threadsAndUsers: LiveData<List<Pair<ThreadModel,UserModel>>> = _threadsAndUsers
+     private var _threadsAndUsers = MutableLiveData<List<Pair<ThreadModel, UserModel>>>()
+     val threadsAndUsers: LiveData<List<Pair<ThreadModel, UserModel>>> = _threadsAndUsers
 
      init {
-         fetchThreadsAndUsers {
-              _threadsAndUsers.value = it
-         }
+          fetchThreadsAndUsers {
+               _threadsAndUsers.value = it
+          }
      }
 
-    private fun fetchThreadsAndUsers(onResult: (List<Pair<ThreadModel,UserModel>>) -> Unit){
+     private fun fetchThreadsAndUsers(onResult: (List<Pair<ThreadModel, UserModel>>) -> Unit) {
+          threadRef.addValueEventListener(object : ValueEventListener {
+               override fun onDataChange(snapshot: DataSnapshot) {
+                    val result = mutableListOf<Pair<ThreadModel, UserModel>>()
+                    for (threadSnapshot in snapshot.children) {
+                         val thread = threadSnapshot.getValue(ThreadModel::class.java)
+                         thread?.let {
+                              fetchUserFromThread(it) { user ->
+                                   result.add(0, it to user)
+                                   if (result.size == snapshot.childrenCount.toInt()) {
+                                        onResult(result)
+                                   }
+                              }
+                         }
+                    }
+               }
 
-         thread.addValueEventListener(object : ValueEventListener{
-              override fun onDataChange(snapshot:DataSnapshot){
+               override fun onCancelled(error: DatabaseError) {
+                    // Handle error
+               }
+          })
+     }
 
-                 val result = mutableListOf<Pair<ThreadModel,UserModel>>()
-                 for(threadSnapshot in snapshot.children){
-                      val thread = threadSnapshot.getValue(ThreadModel::class.java)
-                      thread.let {
-                           fetchUserFromThread(it!!){
-                                user ->
-                                result.add(0, it to user)
-
-                                if(result.size == snapshot.childrenCount.toInt()){
-                                     onResult(result)
-                                }
-                           }
-                      }
-                 }
-
-              }
-
-              override fun onCancelled(error: DatabaseError) {
-                   TODO("Not yet implemented")
-              }
-         })
-    }
-
-     fun fetchUserFromThread(thread : ThreadModel, onResult:(UserModel) -> Unit){
+     fun fetchUserFromThread(thread: ThreadModel, onResult: (UserModel) -> Unit) {
           db.getReference("users").child(thread.userId)
-               .addListenerForSingleValueEvent(object  : ValueEventListener{
+               .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-
                          val user = snapshot.getValue(UserModel::class.java)
                          user?.let(onResult)
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                         TODO("Not yet implemented")
+                         // Handle error
                     }
                })
      }
 
-
+//     fun likePost(threadId: String, userId: String) {
+//          threadRef.child(threadId).runTransaction(object : Transaction.Handler {
+//               override fun doTransaction(currentData: MutableData): Transaction.Result {
+//                    val thread = currentData.getValue(ThreadModel::class.java) ?: return Transaction.success(currentData)
+//                    if (thread.likedBy.contains(userId)) {
+//                         thread.likesCount -= 1
+//                         thread.likedBy = thread.likedBy - userId
+//                    } else {
+//                         thread.likesCount += 1
+//                         thread.likedBy = thread.likedBy + userId
+//                    }
+//                    currentData.value = thread
+//                    return Transaction.success(currentData)
+//               }
+//
+//               override fun onComplete(databaseError: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+//                    if (databaseError != null) {
+//                         _error.value = databaseError.message
+//                    }
+//               }
+//          })
+//     }
 }
+
+

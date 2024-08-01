@@ -7,4 +7,5 @@ data class ThreadModel(
     val image: String = "",
     val userId: String = "",
     val timeStamp: String = "",
+    val likes: Map<String, Boolean> = emptyMap() // userId as key, liked status as value
 )

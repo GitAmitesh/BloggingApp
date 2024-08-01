@@ -58,6 +58,7 @@ fun SignInScreen(navController: NavHostController) {
 
     firebaseUser?.let {
         LaunchedEffect(firebaseUser) {
+            Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
             navController.navigate("bottomnav") {
                 popUpTo("signin") { inclusive = true }
             }
