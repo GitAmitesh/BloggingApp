@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.blogging_app.Screens.*
-import com.example.blogging_app.screens.HomeScreen
+import com.example.blogging_app.Screens.HomeScreen
 
 @Composable fun NavGraph(NavController:NavHostController){
     val navController= rememberNavController()
@@ -17,7 +17,7 @@ import com.example.blogging_app.screens.HomeScreen
         composable(Routes.SignUp.route) { SignupScreen(navController) }
         composable(Routes.BottomNav.route) { BottomNav(navController) }
         composable(Routes.Home.route) { HomeScreen(navController) }
-        composable(Routes.Notification.route) { Notification(navController) }
+        composable(Routes.SavedBlog.route) { SavedBlog(navController) }
         composable(Routes.Search.route) { Search(navController) }
         composable(Routes.Profile.route) { Profile(navController) }
         composable(Routes.OtherUsers.route) { backStackEntry ->

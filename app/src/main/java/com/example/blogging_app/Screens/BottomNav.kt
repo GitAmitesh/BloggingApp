@@ -1,9 +1,8 @@
 // BottomNav.kt
 package com.example.blogging_app.Screens
 
-import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material3.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -21,8 +20,7 @@ import androidx.navigation.compose.*
 import com.example.blogging_app.R
 import com.example.blogging_app.model.BottomNavItem
 import com.example.blogging_app.navigation.Routes
-import com.example.blogging_app.screens.HomeScreen
-import com.example.blogging_app.viewmodel.AuthViewModel
+
 
 @Composable
 fun BottomNav(navController: NavHostController) {
@@ -38,7 +36,7 @@ fun BottomNav(navController: NavHostController) {
             composable(Routes.Home.route) { HomeScreen(navController) }
             composable(Routes.Search.route) { Search(navController1) }
             composable(Routes.Add.route) { AddPost(navController1) }
-            composable(Routes.Notification.route) { Notification(navController1) }
+            composable(Routes.SavedBlog.route) { SavedBlog(navController1) }
             composable(Routes.Profile.route) { Profile(navController) }
         }
     }
@@ -65,7 +63,7 @@ fun MyBottomBar(navController1: NavHostController) {
         ),
         BottomNavItem(
             "Saved",
-            Routes.Notification.route,
+            Routes.SavedBlog.route,
             ImageVector.vectorResource(id = R.drawable.baseline_bookmarks_24)
         ),
         BottomNavItem(
@@ -106,5 +104,3 @@ fun MyBottomBar(navController1: NavHostController) {
     }
 }
 
-//// Ensure to import the HomeScreen
-//import com.example.blogging_app.Screens.HomeScreen

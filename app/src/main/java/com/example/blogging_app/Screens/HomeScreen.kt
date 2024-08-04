@@ -1,4 +1,4 @@
-package com.example.blogging_app.screens
+package com.example.blogging_app.Screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
