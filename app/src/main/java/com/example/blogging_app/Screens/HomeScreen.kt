@@ -1,5 +1,6 @@
 package com.example.blogging_app.Screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,7 +26,14 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun HomeScreen(navHostController: NavHostController) {
     val homeViewModel: HomeViewModel = viewModel()
-    val threadAndUsers by homeViewModel.threadsAndUsers.observeAsState(null)
+    val threadAndUsers by homeViewModel.threadsAndUsers.observeAsState(emptyList())
+
+    if (threadAndUsers.isEmpty()) {
+        Log.d("HomeScreen", "No posts available")
+    } else {
+        Log.d("HomeScreen", "Posts available: ${threadAndUsers.size}")
+    }
+
     LazyColumn(
         modifier = Modifier
             .background(color = Color.White)
@@ -48,7 +57,7 @@ fun HomeScreen(navHostController: NavHostController) {
                 )
             }
         }
-        items(threadAndUsers ?: emptyList()) { pairs ->
+        items(threadAndUsers) { pairs ->
             ThreadItem(
                 thread = pairs.first,
                 users = pairs.second,
@@ -58,3 +67,5 @@ fun HomeScreen(navHostController: NavHostController) {
         }
     }
 }
+
+

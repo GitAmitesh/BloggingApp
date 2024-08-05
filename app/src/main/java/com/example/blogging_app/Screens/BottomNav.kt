@@ -103,4 +103,3 @@ fun MyBottomBar(navController1: NavHostController) {
         }
     }
 }
-

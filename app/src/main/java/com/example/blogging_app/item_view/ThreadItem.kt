@@ -43,6 +43,11 @@ fun ThreadItem(
     navHostController: NavHostController,
     userId: String
 ) {
+    if (thread == null || users == null) {
+        // Handle the case where thread or user data is null
+        Text("Loading...")
+        return
+    }
     val auth = FirebaseAuth.getInstance()
     val db: DatabaseReference = FirebaseDatabase.getInstance().getReference("posts/${thread.id}/likes")
     var isLiked by remember { mutableStateOf(false) }
@@ -167,22 +172,24 @@ fun ThreadItem(
                 painter = painterResource(id = R.drawable.baseline_bookmarks_24),
                 contentDescription = "Bookmark",
                 tint = Color.Gray,
-                modifier = Modifier.size(24.dp)
-                    .clickable {  }
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { }
             )
         }
 //            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text ="${likesCount} likes",
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                ), modifier = Modifier.padding(horizontal = 13.dp, )
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Divider(color = Color.LightGray, thickness = 1.dp)
+        Text(
+            text = "${likesCount} likes",
+            style = TextStyle(
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            ), modifier = Modifier.padding(horizontal = 13.dp)
+        )
     }
+    Spacer(modifier = Modifier.height(8.dp))
+    Divider(color = Color.LightGray, thickness = 1.dp)
+}
+
 
 
 fun formatTime(timestamp: String): String {

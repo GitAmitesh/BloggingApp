@@ -24,7 +24,6 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import java.util.UUID
 
-@Suppress("UNREACHABLE_CODE")
 class AuthViewModel : ViewModel() {
      private val auth = FirebaseAuth.getInstance()
      private val db = FirebaseDatabase.getInstance()
@@ -35,8 +34,8 @@ class AuthViewModel : ViewModel() {
      private val _firebaseUser = MutableLiveData<FirebaseUser?>()
      val firebaseUser: LiveData<FirebaseUser?> = _firebaseUser
 
-     private val _userData = MutableLiveData<UserModel>()
-     val userData: LiveData<UserModel> = _userData
+     private val _userData = MutableLiveData<UserModel?>()
+     val userData: LiveData<UserModel?> = _userData
 
      private val _error = MutableLiveData<String>()
      val error: LiveData<String> = _error
@@ -62,7 +61,7 @@ class AuthViewModel : ViewModel() {
                     }
                }
      }
-     //for forget password
+
      fun resetPassword(email: String, context: Context) {
           auth.sendPasswordResetEmail(email)
                .addOnCompleteListener { task ->
@@ -73,13 +72,17 @@ class AuthViewModel : ViewModel() {
                     }
                }
      }
-     //
 
      private fun getData(uid: String, context: Context) {
           userRef.child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
                override fun onDataChange(snapshot: DataSnapshot) {
                     val userData = snapshot.getValue(UserModel::class.java)
-                    SharedPref.storeData(userData!!.username, userData.email, userData.password, userData.imageUrl, context)
+                    if (userData != null) {
+                         SharedPref.storeData(userData.username, userData.email, userData.password, userData.imageUrl, context)
+                         _userData.postValue(userData)
+                    } else {
+                         _error.postValue("User data not found")
+                    }
                }
 
                override fun onCancelled(error: DatabaseError) {
@@ -100,26 +103,7 @@ class AuthViewModel : ViewModel() {
                .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                          Log.d("AuthViewModel", "User created successfully")
-                         auth.currentUser?.sendEmailVerification()
-                              ?.addOnSuccessListener {
-                                   Log.d("AuthViewModel", "Verification email sent successfully")
-                                   Toast.makeText(context, "Please verify your email", Toast.LENGTH_SHORT).show()
-                                   Handler(Looper.getMainLooper()).postDelayed({
-                                   logout()
-                                        navController.navigate("signin") {
-                                             popUpTo(navController.graph.startDestinationId)
-                                             launchSingleTop = true
-                                        }
-
-                                   }, 3000) // 3 seconds delay
-
-                              }
-                              ?.addOnFailureListener {
-                                   Log.e("AuthViewModel", "Failed to send verification email: ${it.message}")
-                                   _error.postValue("Failed to send verification email")
-                                   logout()
-                              }
-                         saveImage(email, password, username, imageUri, auth.currentUser?.uid, context)
+                         saveImage(email, password, username, imageUri, auth.currentUser?.uid, context, navController)
                     } else {
                          Log.e("AuthViewModel", "User couldn't be created: ${task.exception?.message}")
                          _error.postValue(task.exception?.message)
@@ -133,14 +117,15 @@ class AuthViewModel : ViewModel() {
           username: String,
           imageUri: Uri,
           uid: String?,
-          context: android.content.Context
+          context: android.content.Context,
+          navController: NavHostController
      ) {
           val imageRef = storageRef.child("users/${UUID.randomUUID()}.jpg")
           val uploadTask = imageRef.putFile(imageUri)
           uploadTask.addOnCompleteListener { task ->
                imageRef.downloadUrl.addOnSuccessListener { uri ->
                     Log.d("AuthViewModel", "Image uploaded successfully")
-                    saveData(email, password, username, uri.toString(), uid, context)
+                    saveData(email, password, username, uri.toString(), uid, context, navController)
                }.addOnFailureListener {
                     Log.e("AuthViewModel", "Failed to get download URL: ${it.message}")
                }
@@ -155,13 +140,31 @@ class AuthViewModel : ViewModel() {
           username: String,
           imageUrl: String,
           uid: String?,
-          context: android.content.Context
+          context: android.content.Context,
+          navController: NavHostController
      ) {
           val userData = UserModel(email, password, username, imageUrl, uid!!)
           userRef.child(uid).setValue(userData)
                .addOnSuccessListener {
                     Log.d("AuthViewModel", "User data saved successfully")
                     SharedPref.storeData(username, email, password, imageUrl, context)
+                    auth.currentUser?.sendEmailVerification()
+                         ?.addOnSuccessListener {
+                              Log.d("AuthViewModel", "Verification email sent successfully")
+                              Toast.makeText(context, "Please verify your email", Toast.LENGTH_SHORT).show()
+                              Handler(Looper.getMainLooper()).postDelayed({
+                                   logout()
+                                   navController.navigate("signin") {
+                                        popUpTo(navController.graph.startDestinationId)
+                                        launchSingleTop = true
+                                   }
+                              }, 3000) // 3 seconds delay
+                         }
+                         ?.addOnFailureListener {
+                              Log.e("AuthViewModel", "Failed to send verification email: ${it.message}")
+                              _error.postValue("Failed to send verification email")
+                              logout()
+                         }
                }
                .addOnFailureListener {
                     Log.e("AuthViewModel", "Failed to save user data: ${it.message}")
@@ -178,7 +181,11 @@ class AuthViewModel : ViewModel() {
           userRef.child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
                override fun onDataChange(snapshot: DataSnapshot) {
                     val user = snapshot.getValue(UserModel::class.java)
-                    _userData.postValue(user!!)
+                    if (user != null) {
+                         _userData.postValue(user)
+                    } else {
+                         _error.postValue("User data not found")
+                    }
                }
 
                override fun onCancelled(error: DatabaseError) {
@@ -192,11 +199,8 @@ class AuthViewModel : ViewModel() {
           _error.value = null
      }
 
-     //for search
-     // LiveData to observe the logged-in user ID
      val loggedInUserId = liveData(Dispatchers.IO) {
           val userId = firebaseAuth.currentUser?.uid ?: ""
           emit(userId)
      }
 }
-

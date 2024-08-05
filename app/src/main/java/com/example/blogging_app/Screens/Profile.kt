@@ -85,7 +85,7 @@ fun Profile(navHostController: NavHostController) {
                     painter = painterResource(id = R.drawable.baseline_arrow_back_24),
                     contentDescription = "Back",
                     modifier = Modifier.clickable {
-                        navHostController.navigate(Routes.Home.route)
+                        navHostController.navigate(Routes.BottomNav.route)
                     }
                 )
                 Spacer(modifier = Modifier.width(12.dp))

@@ -1,6 +1,6 @@
 package com.example.blogging_app.viewmodel
 
-import android.net.Uri
+
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,25 +14,20 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.firestore.core.Transaction
 import com.google.firebase.storage.FirebaseStorage
 import java.util.UUID
+
+
 class HomeViewModel : ViewModel() {
      private val db = FirebaseDatabase.getInstance()
      private val threadRef = db.getReference("posts")
 
-     private val _userData = MutableLiveData<UserModel>()
-     val userData: LiveData<UserModel> = _userData
-     private val _error = MutableLiveData<String>()
-     val error: LiveData<String> = _error
-
-     private var _threadsAndUsers = MutableLiveData<List<Pair<ThreadModel, UserModel>>>()
+     private val _threadsAndUsers = MutableLiveData<List<Pair<ThreadModel, UserModel>>>()
      val threadsAndUsers: LiveData<List<Pair<ThreadModel, UserModel>>> = _threadsAndUsers
 
      init {
-          fetchThreadsAndUsers {
-               _threadsAndUsers.value = it
-          }
+          fetchThreadsAndUsers()
      }
 
-     private fun fetchThreadsAndUsers(onResult: (List<Pair<ThreadModel, UserModel>>) -> Unit) {
+     private fun fetchThreadsAndUsers() {
           threadRef.addValueEventListener(object : ValueEventListener {
                override fun onDataChange(snapshot: DataSnapshot) {
                     val result = mutableListOf<Pair<ThreadModel, UserModel>>()
@@ -40,10 +35,8 @@ class HomeViewModel : ViewModel() {
                          val thread = threadSnapshot.getValue(ThreadModel::class.java)
                          thread?.let {
                               fetchUserFromThread(it) { user ->
-                                   result.add(0, it to user)
-                                   if (result.size == snapshot.childrenCount.toInt()) {
-                                        onResult(result)
-                                   }
+                                   result.add(it to user)
+                                   _threadsAndUsers.value = result
                               }
                          }
                     }
@@ -55,7 +48,7 @@ class HomeViewModel : ViewModel() {
           })
      }
 
-     fun fetchUserFromThread(thread: ThreadModel, onResult: (UserModel) -> Unit) {
+     private fun fetchUserFromThread(thread: ThreadModel, onResult: (UserModel) -> Unit) {
           db.getReference("users").child(thread.userId)
                .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
@@ -68,29 +61,4 @@ class HomeViewModel : ViewModel() {
                     }
                })
      }
-
-//     fun likePost(threadId: String, userId: String) {
-//          threadRef.child(threadId).runTransaction(object : Transaction.Handler {
-//               override fun doTransaction(currentData: MutableData): Transaction.Result {
-//                    val thread = currentData.getValue(ThreadModel::class.java) ?: return Transaction.success(currentData)
-//                    if (thread.likedBy.contains(userId)) {
-//                         thread.likesCount -= 1
-//                         thread.likedBy = thread.likedBy - userId
-//                    } else {
-//                         thread.likesCount += 1
-//                         thread.likedBy = thread.likedBy + userId
-//                    }
-//                    currentData.value = thread
-//                    return Transaction.success(currentData)
-//               }
-//
-//               override fun onComplete(databaseError: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
-//                    if (databaseError != null) {
-//                         _error.value = databaseError.message
-//                    }
-//               }
-//          })
-//     }
 }
-
-

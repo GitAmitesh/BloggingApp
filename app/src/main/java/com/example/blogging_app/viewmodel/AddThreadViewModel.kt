@@ -129,7 +129,6 @@ class AddThreadViewModel : ViewModel() {
                     _isUpdated.value = false
                }
      }
-
      // to fetch the existing data to the edit post page
      fun getThreadById(threadId: String, onResult: (ThreadModel?) -> Unit) {
           val threadRef = userRef.child(threadId)
