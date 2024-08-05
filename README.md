@@ -45,7 +45,7 @@ BlogBliss is a modern blogging application built with Jetpack Compose and Fireba
 ## Download
 
 You can download the latest version of BlogBliss from the link below:
-
+https://github.com/Subhashreemohanty07/BloggingApp/releases/download/v1.0.0/BlogBliss.apk
 
 
 ## Installation
